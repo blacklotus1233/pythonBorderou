@@ -1,6 +1,9 @@
 import flet as ft
 import datetime
 
+#TODO de revizuit codul
+#TODO de creat sablonul pentru pdf
+
 
 def main(page: ft.Page):
 
