@@ -1,8 +1,12 @@
 import flet as ft
 import datetime
 
+from click import clear
+
+import excell_generation
+
 #TODO de revizuit codul
-#TODO de creat sablonul pentru pdf
+
 
 
 def main(page: ft.Page):
@@ -25,6 +29,7 @@ def main(page: ft.Page):
     bani = ['1 leu', '2 lei', '5 lei', '10 lei', '1 ban', '5 bani', '10 bani', '25 bani', '50 bani']
     bancnote_dict={'1 leu':1, '5 lei':5, '10 lei':10, '20 lei':20, '50 lei':50, '100 lei':100, '200 lei':200, '500 lei':500, '1000 lei':1000}
     bani_dict= {'1 leu':1, '2 lei':2, '5 lei':5, '10 lei':10, '1 ban':1, '5 bani':5, '10 bani':10, '25 bani':25, '50 bani':50}
+    input_values = {}  # Dictionary to store input values
 
     # Function to calculate value multiplied by 4
     def calculate_value(event, text_field, result_field, multiplier):
@@ -53,8 +58,54 @@ def main(page: ft.Page):
         else:
             date_text_field.value = ""  # Clear the TextField if no date is selected
         date_text_field.update()
+#function to stor input values from form
+    def store_input_values(e):
+        input_values.clear()  # Clear any previous values
+        for i, field in enumerate(
+                container1_inputs + container1_results + container2_inputs + container3_inputs + container3_results + container4_fields + [
+                    container1_sum_field, container3_sum_field]):
+            input_values[f"input_{i}"] = field.value
+       # input_values["date"] = date_text_field.value
+        print(input_values)  # Print values to verify, can be
+        #generam excell file
+        excell_generation.fill_excel_template(input_values)
 
-    # Set the on_change event for the DatePicker
+        dialog = ft.AlertDialog(
+            title=ft.Text("Success!"),
+            content=ft.Text("Borderoul a fost generat cu succes!"),
+            on_dismiss=lambda e: page.update()
+        )
+        page.overlay.append(dialog)
+        dialog.open = True
+        page.update()
+
+        # Function to clear all input fields except read-only fields
+
+    def clear_all_inputs(event):
+        for field in [date_text_field, *container1_inputs, *container2_inputs, *container3_inputs, *container4_fields,*container1_results,*container3_results,container3_sum_field,container1_sum_field]:
+            if field.read_only and field in container4_fields:
+                pass
+            else:# Only clear fields that are not read-only
+                field.value = ""
+                field.update()
+
+    def confirm_clear_all(event):
+        confirmation_dialog = ft.AlertDialog(
+            title=ft.Text("Confirmare Actiune"),
+            content=ft.Text("Sunteti sigur ca doriti sa resetati borderoul?"),
+            actions=[
+                ft.TextButton("Da", on_click=lambda e: (clear_all_inputs(e), page.close(confirmation_dialog))),
+                ft.TextButton("Renunta", on_click=lambda e: page.close(confirmation_dialog))
+
+            ],
+            on_dismiss=lambda e: page.update()
+        )
+        page.overlay.append(confirmation_dialog)
+        confirmation_dialog.open = True
+        page.update()
+
+
+     #main code
     date_picker.on_change = update_date_text
 
 
@@ -109,30 +160,31 @@ def main(page: ft.Page):
     )
 
     # Container 2: 3 input boxes (without calculation)
-    container2_inputs = []
-    for i in range(10, 13):  # Adjusted to 3 inputs
-        input_field = ft.TextField(label=f"Input {i}", expand=True)
-        container2_inputs.append(input_field)
+    container2_inputs = [
+        date_text_field,
+        ft.TextField(label="Geanta nr.", expand=True),
+        ft.TextField(label="Casier", expand=True)
+    ]
 
     container2 = ft.Container(
         content=ft.ListView(
             controls=[
                 ft.Text(value="GEANTA:", size=14, weight="bold"),
-                date_text_field,
+                container2_inputs[0],
                 ft.ElevatedButton(
                     "Pick date",
                     icon=ft.icons.CALENDAR_MONTH,
                     on_click=lambda e: page.open(
                         ft.DatePicker(
-                            #first_date=datetime.datetime(year=2023, month=10, day=1),
-                            #last_date=datetime.datetime(year=2024, month=10, day=1),
+                            # first_date=datetime.datetime(year=2023, month=10, day=1),
+                            # last_date=datetime.datetime(year=2024, month=10, day=1),
                             on_change=update_date_text,
-                           # on_dismiss=handle_dismissal,
+                            # on_dismiss=handle_dismissal,
                         )
                     ),
                 ),
-                ft.TextField(label="Geanta nr.", expand=True),
-                ft.TextField(label="Casier", expand=True),
+                container2_inputs[1],
+                container2_inputs[2],
             ],
             spacing=5,
             auto_scroll=False  # Disable auto scrolling
@@ -198,7 +250,14 @@ def main(page: ft.Page):
         bgcolor="white",  # Background color for container
         expand=True  # Enable expansion for the container
     )
-
+    container4_fields = [
+        ft.TextField(label="Compania", expand=True, read_only=True, bgcolor="lightgray", value="Moldtelecom SA"),
+        ft.TextField(label="Cod fiscal", expand=True, read_only=True, bgcolor="lightgray", value="1002600048836"),
+        ft.TextField(label="Cont nr.", expand=True),
+        ft.TextField(label="Locul", expand=True),
+        ft.TextField(label="Subdiviziunea", expand=True),
+        ft.TextField(label="tel.", expand=True)
+    ]
     # Container 4: 9 input boxes divided into 2 columns (static layout)
     container4 = ft.Container(
         content=ft.ListView(
@@ -206,26 +265,8 @@ def main(page: ft.Page):
                 ft.Text(value="INFORMATIA GENERALA:", size=14, weight="bold"),  # Single label for the container
                 ft.Row(
                     controls=[
-                        ft.Column(
-                            controls=[
-                                ft.TextField(label="Compania", expand=True,read_only=True,bgcolor="lightgray",value="Moldtelecom SA"),
-                                ft.TextField(label="Cod fiscal", expand=True,read_only=True,bgcolor="lightgray",value="1002600048836"),
-                                ft.TextField(label="Cont nr.", expand=True),
-                            ],
-                            alignment=ft.MainAxisAlignment.START,
-                            spacing=5,
-                            expand=True
-                        ),
-                        ft.Column(
-                            controls=[
-                                ft.TextField(label="Locul", expand=True),
-                                ft.TextField(label="Subdiviziunea", expand=True),
-                                ft.TextField(label="tel.", expand=True),
-                            ],
-                            alignment=ft.MainAxisAlignment.START,
-                            spacing=5,
-                            expand=True
-                        )
+                        ft.Column(controls=container4_fields[:3], expand=True),
+                        ft.Column(controls=container4_fields[3:], expand=True)
                     ],
                     alignment=ft.MainAxisAlignment.START,
                     spacing=10,
@@ -243,29 +284,37 @@ def main(page: ft.Page):
     )
 
     # Create a button for the footer
-    footer_button = ft.ElevatedButton(
+    generate_button = ft.ElevatedButton(
         text="Generare Borderou",
-        on_click=lambda e: print("Click placeholder!"),  # Placeholder for on-click event
+        on_click=store_input_values,  # Placeholder for on-click event
         width=300,  # Set button width
         height=60,   # Set button height
-        elevation=7
+        elevation=7,
+        bgcolor="#B7B7B7",
     )
-    # Add footer button in a Row with alignment to the right (end)
-    footer_row = ft.Row(
-        controls=[footer_button],
-        alignment=ft.MainAxisAlignment.END,  # Align to the right (end of row)
-        expand=True  # Make the row take the full width
+    clear_button = ft.ElevatedButton(
+        text="Curata Borderou",
+        on_click=confirm_clear_all,
+        width=150,
+        height=60,
+        elevation=7,
+        bgcolor="#B7B7B7",
+       # color="black"
+    )
 
-    )
 
     footer_container = ft.Container(
-        content=footer_button,
-        alignment=ft.Alignment(1,1),  # Align to the right
-        padding=10,  # Add padding around the button
-        bgcolor=ft.colors.WHITE,  # Background color for the container
-        #border=ft.border.all(2, "black"),  # Add border to the container
-        #border_radius=5  # Rounded corners for the container
+        content=ft.Row(
+            controls=[
+                clear_button,    # Left-aligned button
+                generate_button  # Right-aligned button
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,  # Space out buttons to opposite ends
+            expand=True,
+        ),
+        padding=10,
     )
+
     # Layout with scrolling
     page.add(
         ft.Column(
