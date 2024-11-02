@@ -1,11 +1,14 @@
 import flet as ft
 import datetime
-
-from click import clear
-
+import os
 import excell_generation
 
 #TODO de revizuit codul
+#TODO de facut prima build pe windows
+#TODO de facut primul release pe web
+#TODO salvare pe desktop
+#TODO add icon
+#TODO de securizat codul cu pyarmor
 
 
 
@@ -58,7 +61,8 @@ def main(page: ft.Page):
         else:
             date_text_field.value = ""  # Clear the TextField if no date is selected
         date_text_field.update()
-#function to stor input values from form
+
+
     def store_input_values(e):
         input_values.clear()  # Clear any previous values
         for i, field in enumerate(
@@ -66,13 +70,13 @@ def main(page: ft.Page):
                     container1_sum_field, container3_sum_field]):
             input_values[f"input_{i}"] = field.value
        # input_values["date"] = date_text_field.value
-        print(input_values)  # Print values to verify, can be
+        #print(input_values)  # Print values to verify, can be
         #generam excell file
         excell_generation.fill_excel_template(input_values)
 
         dialog = ft.AlertDialog(
             title=ft.Text("Success!"),
-            content=ft.Text("Borderoul a fost generat cu succes!"),
+            content=ft.Text("Borderoul a fost generat pe desktop!"),
             on_dismiss=lambda e: page.update()
         )
         page.overlay.append(dialog)

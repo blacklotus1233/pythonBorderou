@@ -1,4 +1,5 @@
 from openpyxl import load_workbook
+import os
 
 #TODO: sablonul excell de aranjat cant la monede si bancnote pe centru
 #TODO: de verificat sablonul ca fontul size si font sa coincida peste tot
@@ -60,12 +61,14 @@ def fill_excel_template(data):
     #monede
     sheet["E34"] = data['input_46']
 
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    file_path = os.path.join(desktop_path, "borderou_mtc.xlsx")
     # Save as a new file
-    workbook.save("filled_template.xlsx")
+    workbook.save(file_path)
 
 input_dict={'input_0': '1', 'input_1': '2', 'input_2': '3', 'input_3': '4', 'input_4': '5', 'input_5': '6', 'input_6': '7', 'input_7': '8', 'input_8': '9', 'input_9': '1.0', 'input_10': '10.0', 'input_11': '30.0',
  'input_12': '80.0', 'input_13': '250.0', 'input_14': '600.0', 'input_15': '1400.0', 'input_16': '4000.0', 'input_17': '9000.0', 'input_18': '30.10.2024', 'input_19': 'genata', 'input_20': 'casier', 'input_21': '10',
  'input_22': '11', 'input_23': '12', 'input_24': '13', 'input_25': '14', 'input_26': '15', 'input_27': '16', 'input_28': '17', 'input_29': '18', 'input_30': '10.0', 'input_31': '22.0', 'input_32': '60.0', 'input_33': '130.0',
  'input_34': '0.14', 'input_35': '0.75', 'input_36': '1.6', 'input_37': '4.25', 'input_38': '9.0', 'input_39': 'Moldtelecom SA', 'input_40': '1002600048836', 'input_41': 'cont', 'input_42': 'locul', 'input_43': 'sdvz',
  'input_44': 'telefon', 'input_45': '15371.0', 'input_46': '237.74'}
-fill_excel_template(input_dict)
+#fill_excel_template(input_dict)
